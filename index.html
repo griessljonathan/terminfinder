@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminfinder</title>
+<meta name="description" content="Beispielprojekt aus dem Kurs Track A. Freie Termine der Woche auf einen Blick.">
+<style>
+  :root {
+    --grund: #f6f7f4; --flaeche: #ffffff; --text: #1d2521; --leise: #5d6a63;
+    --linie: #dde2dc; --frei: #1f7a55; --frei-hell: #e3f2ea; --belegt: #9aa39e; --akzent: #1f5f8b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --grund: #141917; --flaeche: #1c2320; --text: #e7ece9; --leise: #9aa8a0;
+      --linie: #2c3632; --frei: #5cc896; --frei-hell: #1d3429; --belegt: #5f6a64; --akzent: #7db7e0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--grund); color: var(--text);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; }
+  .unter { color: var(--leise); margin: 0 0 24px; }
+  .leiste { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .zahl { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--frei); }
+  label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  .woche { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .tag { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 10px; padding: 12px; }
+  .tag h2 { font-size: 1rem; margin: 0 0 8px; }
+  .slot { display: flex; justify-content: space-between; width: 100%; margin: 0 0 6px; padding: 8px 10px;
+          border-radius: 6px; border: 1px solid transparent; font: inherit; text-align: left;
+          font-variant-numeric: tabular-nums; }
+  .slot.frei { background: var(--frei-hell); color: var(--frei); border-color: var(--frei); cursor: pointer; }
+  .slot.frei:hover, .slot.frei:focus-visible { outline: 2px solid var(--akzent); outline-offset: 1px; }
+  .slot.belegt { background: transparent; color: var(--belegt); border-color: var(--linie); }
+  .slot.meins { background: var(--akzent); color: var(--flaeche); border-color: var(--akzent); }
+  .versteckt { display: none; }
+  footer { margin-top: 32px; color: var(--leise); font-size: .875rem; }
+  a { color: var(--akzent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Terminfinder</h1>
+  <p class="unter">Freie Termine der Woche auf einen Blick. Klick auf einen freien Termin, um ihn für dich vorzumerken.</p>
+
+  <div class="leiste">
+    <span><span class="zahl" id="anzahl">0</span> Termine frei</span>
+    <label><input type="checkbox" id="nurFrei"> Nur freie zeigen</label>
+  </div>
+
+  <div class="woche" id="woche"></div>
+
+  <footer>
+    Beispielprojekt aus dem Kurs Track A am Franklin Institute. Alle Daten sind erfunden, nichts wird gespeichert.
+    Diese Seite wird von GitHub Pages ausgeliefert.
+  </footer>
+</main>
+<script>
+  const termine = {
+    Montag:     [["09:00", "frei"], ["10:00", "frei"], ["11:30", "belegt"], ["14:00", "frei"]],
+    Dienstag:   [["09:00", "belegt"], ["14:00", "belegt"], ["16:00", "frei"]],
+    Mittwoch:   [["10:00", "frei"], ["13:00", "frei"], ["15:30", "belegt"]],
+    Donnerstag: [["09:30", "belegt"], ["11:00", "frei"], ["14:00", "belegt"], ["16:30", "frei"]],
+    Freitag:    [["09:00", "frei"], ["12:00", "belegt"]]
+  };
+
+  const woche = document.getElementById("woche");
+  const nurFrei = document.getElementById("nurFrei");
+
+  function zeichnen() {
+    woche.innerHTML = "";
+    let frei = 0;
+    for (const [tag, slots] of Object.entries(termine)) {
+      const karte = document.createElement("section");
+      karte.className = "tag";
+      karte.innerHTML = "<h2>" + tag + "</h2>";
+      slots.forEach((slot, i) => {
+        const [zeit, status] = slot;
+        if (status === "frei") frei++;
+        const knopf = document.createElement("button");
+        knopf.className = "slot " + status;
+        knopf.disabled = status === "belegt";
+        knopf.innerHTML = "<span>" + zeit + " Uhr</span><span>" +
+          (status === "meins" ? "vorgemerkt" : status) + "</span>";
+        if (nurFrei.checked && status === "belegt") knopf.classList.add("versteckt");
+        knopf.addEventListener("click", () => {
+          termine[tag][i][1] = status === "frei" ? "meins" : "frei";
+          zeichnen();
+        });
+        karte.appendChild(knopf);
+      });
+      woche.appendChild(karte);
+    }
+    document.getElementById("anzahl").textContent = frei;
+  }
+
+  nurFrei.addEventListener("change", zeichnen);
+  zeichnen();
+</script>
+</body>
+</html>
